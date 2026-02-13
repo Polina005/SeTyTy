@@ -1,0 +1,43 @@
+#include <thread>
+#include <chrono>
+#include <iostream>
+#include <fstream>
+#include <filesystem>
+using namespace std;
+using namespace std::chrono;
+using namespace std::this_thread;
+int main()
+{
+	setlocale(LC_ALL, "Russian");
+	string filepath = "Z:\\VS\\lab1.txt";
+	int interval = 1;
+
+	ifstream file(filepath, ios::binary | ios::ate);
+	if (!file)
+	{
+		cout << "файл не найден"<<endl;
+		}
+	long long last_size = file.tellg();
+	file.close();
+
+	while (true)
+	{
+		sleep_for(seconds(interval));
+		ifstream file(filepath, ios::binary | ios::ate);
+
+		if (!file)
+		{
+			cout << "файл пропал"<<endl;
+			break;
+			
+		}
+		long long current_size = file.tellg();
+		file.close();
+		if (current_size != last_size)
+		{
+			cout << " файл изменен" << endl;
+			last_size = current_size;
+		}
+	}
+
+}
