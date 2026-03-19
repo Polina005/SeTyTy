@@ -1,0 +1,201 @@
+#include <iostream>
+#include <fstream>
+#include <thread>
+#include <chrono>
+using namespace std;
+
+void trim(char* str) {
+    int start = 0;
+    while (str[start] == ' ' || str[start] == '\t' || str[start] == '\n' || str[start] == '\r') {
+        start++;
+    }
+
+    int end = 0;
+    while (str[end] != '\0') end++;
+    end--;
+
+    while (end >= start && (str[end] == ' ' || str[end] == '\t' || str[end] == '\n' || str[end] == '\r')) {
+        str[end] = '\0';
+        end--;
+    }
+
+    if (start > 0) {
+        int i = 0;
+        while (str[start] != '\0') {
+            str[i] = str[start];
+            i++;
+            start++;
+        }
+        str[i] = '\0';
+    }
+}
+
+bool isNumber(const char* str) {
+    if (str[0] == '\0') return false;
+
+    bool hasDecimal = false;
+    for (int i = 0; str[i] != '\0'; i++) {
+        if (str[i] == '.') {
+            if (hasDecimal) return false;
+            hasDecimal = true;
+        }
+        else if (str[i] < '0' || str[i] > '9') {
+            return false;
+        }
+    }
+    return true;
+}
+
+float toFloat(const char* str) {
+    float result = 0;
+    float decimal = 0;
+    bool afterDecimal = false;
+    float decimalDiv = 10;
+
+    for (int i = 0; str[i] != '\0'; i++) {
+        if (str[i] == '.') {
+            afterDecimal = true;
+        }
+        else if (!afterDecimal) {
+            result = result * 10 + (str[i] - '0');
+        }
+        else {
+            decimal = decimal + (float)(str[i] - '0') / decimalDiv;
+            decimalDiv *= 10;
+        }
+    }
+
+    return result + decimal;
+}
+
+int main() {
+    setlocale(LC_ALL, "Russian");
+
+    cout << "=== СЕРВЕР ЗАПУЩЕН ===\n";
+    cout << "Для выхода закройте окно\n\n";
+
+    // Используем общую папку
+    system("mkdir C:\\Users\\Public\\Server 2>nul");
+
+    // Создаем файл с заголовком
+    ofstream createFile("C:\\Users\\Public\\Server\\server.txt");
+    createFile << "Requests from clients (nickname height weight):" << endl;
+    createFile.close();
+
+    cout << "Сервер ожидает запросы в: C:\\Users\\Public\\Server\\server.txt\n\n";
+
+    int lastSize = 0;
+    int requestCount = 0;
+
+    while (true) {
+        ifstream file("C:\\Users\\Public\\Server\\server.txt");
+        if (file.is_open()) {
+            file.seekg(0, ios::end);
+            int currentSize = file.tellg();
+            file.close();
+
+            if (currentSize > lastSize) {
+                requestCount++;
+                cout << "\n▶ Получен новый запрос #" << requestCount << "!\n";
+
+                // Читаем последнюю строку
+                ifstream readFile("C:\\Users\\Public\\Server\\server.txt");
+                char line[256];
+                char lastLine[256] = "";
+
+                while (readFile.getline(line, 256)) {
+                    int i = 0;
+                    while (line[i] != '\0') {
+                        lastLine[i] = line[i];
+                        i++;
+                    }
+                    lastLine[i] = '\0';
+                }
+                readFile.close();
+
+                trim(lastLine);
+
+                // Пропускаем заголовок
+                if (lastLine[0] == '\0' || lastLine[0] == 'R') {
+                    lastSize = currentSize;
+                    continue;
+                }
+
+                // Разбираем строку
+                char nickname[100] = "";
+                char heightStr[50] = "";
+                char weightStr[50] = "";
+
+                int pos = 0;
+                int part = 0;
+                int j = 0;
+
+                while (lastLine[pos] != '\0' && part < 3) {
+                    if (lastLine[pos] == ' ') {
+                        part++;
+                        j = 0;
+                    }
+                    else if (part == 0) {
+                        nickname[j] = lastLine[pos];
+                        j++;
+                        nickname[j] = '\0';
+                    }
+                    else if (part == 1) {
+                        heightStr[j] = lastLine[pos];
+                        j++;
+                        heightStr[j] = '\0';
+                    }
+                    else if (part == 2) {
+                        weightStr[j] = lastLine[pos];
+                        j++;
+                        weightStr[j] = '\0';
+                    }
+                    pos++;
+                }
+
+                cout << "  Ник: " << nickname << "\n";
+                cout << "  Рост: " << heightStr << "\n";
+                cout << "  Вес: " << weightStr << "\n";
+
+                if (isNumber(heightStr) && isNumber(weightStr)) {
+                    float height = toFloat(heightStr);
+                    float weight = toFloat(weightStr);
+
+                    if (height > 0 && weight > 0) {
+                        float ibm = weight / (height * height) * 10000;
+                        const char* result;
+
+                        if (ibm < 18.5) result = "нехватка веса";
+                        else if (ibm < 25) result = "нормально";
+                        else result = "превышение веса";
+
+                        cout << "  IBM: " << ibm << " (" << result << ")\n";
+
+                        // ============== ИСПРАВЛЕНО: ПРОСТОЙ ПУТЬ ==============
+                        // Сохраняем все ответы в один файл
+                        string responseFile = "C:\\Users\\Public\\Server\\all_responses.txt";
+
+                        // Записываем ответ
+                        ofstream outFile(responseFile, ios::app);
+                        if (outFile.is_open()) {
+                            outFile << nickname << ": Рост " << height << " см, вес " << weight
+                                << " кг -> " << result << " (IBM = " << ibm << ")\n";
+                            outFile.close();
+                            cout << "  ✅ Ответ сохранен в: " << responseFile << "\n\n";
+                        }
+                        else {
+                            cout << "  ❌ Ошибка при сохранении ответа\n\n";
+                        }
+                        // =======================================================
+                    }
+                }
+
+                lastSize = currentSize;
+            }
+        }
+
+        this_thread::sleep_for(chrono::seconds(1));
+    }
+
+    return 0;
+}
