@@ -1,0 +1,92 @@
+#include <iostream>
+#include <fstream>
+#include <windows.h>
+using namespace std;
+
+int main() {
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+    setlocale(LC_ALL, "Russian");
+
+    cout << "=== КЛИЕНТ ЗАПУЩЕН ===\n\n";
+    cout << "Сервер использует папку: C:\\Users\\Public\\Server\\\n\n";
+
+    while (true) {
+        cout << "\n════════════════════════════\n";
+        cout << "1 - Отправить запрос\n";
+        cout << "2 - Проверить ответы\n";
+        cout << "0 - Выход\n";
+        cout << "════════════════════════════\n";
+        cout << "Выбор: ";
+
+        int choice;
+        cin >> choice;
+        cin.ignore();
+
+        if (choice == 0) {
+            cout << "Выход...\n";
+            break;
+        }
+        else if (choice == 1) {
+            char nickname[100];
+            float height, weight;
+
+            cout << "\n--- НОВЫЙ ЗАПРОС ---\n";
+            cout << "Никнейм: ";
+            cin.getline(nickname, 100);
+
+            cout << "Рост (см): ";
+            cin >> height;
+
+            cout << "Вес (кг): ";
+            cin >> weight;
+            cin.ignore();
+
+            // Отправляем запрос
+            ofstream outFile("C:\\Users\\Public\\Server\\server.txt", ios::app);
+            if (outFile.is_open()) {
+                outFile << nickname << " " << height << " " << weight << "\n";
+                outFile.close();
+                cout << "\n✅ ЗАПРОС ОТПРАВЛЕН!\n";
+                cout << "   Ник: " << nickname << "\n";
+            }
+            else {
+                cout << "\n❌ ОШИБКА: Не могу открыть файл\n";
+            }
+        }
+        else if (choice == 2) {
+            // ============== ИСПРАВЛЕНО: ЧИТАЕМ ОБЩИЙ ФАЙЛ ==============
+            string responseFile = "C:\\Users\\Public\\Server\\all_responses.txt";
+
+            cout << "\n--- ПРОВЕРКА ОТВЕТОВ ---\n";
+            cout << "   Читаем файл: " << responseFile << "\n\n";
+
+            ifstream inFile(responseFile);
+            if (inFile.is_open()) {
+                cout << "=== ВСЕ ОТВЕТЫ ===\n";
+                char line[256];
+                int count = 0;
+
+                while (inFile.getline(line, 256)) {
+                    if (line[0] != '\0') {
+                        cout << line << "\n";
+                        count++;
+                    }
+                }
+                inFile.close();
+
+                if (count == 0) {
+                    cout << "   (файл пуст)\n";
+                }
+                cout << "==================\n";
+            }
+            else {
+                cout << "❌ Файл не найден\n";
+                cout << "   Возможно, сервер ещё не создал ответы\n";
+            }
+            // ============================================================
+        }
+    }
+
+    return 0;
+}
