@@ -74,15 +74,13 @@ int main() {
     cout << "=== СЕРВЕР ЗАПУЩЕН ===\n";
     cout << "Для выхода закройте окно\n\n";
 
-    // Используем общую папку
+
     system("mkdir C:\\Users\\Public\\Server 2>nul");
 
-    // Создаем файл с заголовком
     ofstream createFile("C:\\Users\\Public\\Server\\server.txt");
     createFile << "Requests from clients (nickname height weight):" << endl;
     createFile.close();
 
-    cout << "Сервер ожидает запросы в: C:\\Users\\Public\\Server\\server.txt\n\n";
 
     int lastSize = 0;
     int requestCount = 0;
@@ -94,11 +92,10 @@ int main() {
             int currentSize = file.tellg();
             file.close();
 
-            if (currentSize > lastSize) {
+            if (currentSize > lastSize ) {
+                if(lastSize != 0)
+                    cout << "\n Получен новый запрос #" << requestCount << "!\n";
                 requestCount++;
-                cout << "\n▶ Получен новый запрос #" << requestCount << "!\n";
-
-                // Читаем последнюю строку
                 ifstream readFile("C:\\Users\\Public\\Server\\server.txt");
                 char line[256];
                 char lastLine[256] = "";
@@ -172,19 +169,17 @@ int main() {
                         cout << "  IBM: " << ibm << " (" << result << ")\n";
 
                         // ============== ИСПРАВЛЕНО: ПРОСТОЙ ПУТЬ ==============
-                        // Сохраняем все ответы в один файл
                         string responseFile = "C:\\Users\\Public\\Server\\all_responses.txt";
 
-                        // Записываем ответ
                         ofstream outFile(responseFile, ios::app);
                         if (outFile.is_open()) {
                             outFile << nickname << ": Рост " << height << " см, вес " << weight
                                 << " кг -> " << result << " (IBM = " << ibm << ")\n";
                             outFile.close();
-                            cout << "  ✅ Ответ сохранен в: " << responseFile << "\n\n";
+                            cout << "  Ответ сохранен в: " << responseFile << "\n\n";
                         }
                         else {
-                            cout << "  ❌ Ошибка при сохранении ответа\n\n";
+                            cout << "  Ошибка при сохранении ответа\n\n";
                         }
                         // =======================================================
                     }
@@ -193,9 +188,6 @@ int main() {
                 lastSize = currentSize;
             }
         }
-
         this_thread::sleep_for(chrono::seconds(1));
     }
-
-    return 0;
 }
