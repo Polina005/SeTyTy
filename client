@@ -8,15 +8,14 @@ int main() {
     SetConsoleOutputCP(1251);
     setlocale(LC_ALL, "Russian");
 
-    cout << "=== КЛИЕНТ ЗАПУЩЕН ===\n\n";
-    cout << "Сервер использует папку: C:\\Users\\Public\\Server\\\n\n";
+    cout << "=== КЛИЕНТ ЗАПУЩЕН ===\n";
 
     while (true) {
-        cout << "\n════════════════════════════\n";
+        cout << "\n=====================\n";
         cout << "1 - Отправить запрос\n";
         cout << "2 - Проверить ответы\n";
         cout << "0 - Выход\n";
-        cout << "════════════════════════════\n";
+        cout << "=====================\n";
         cout << "Выбор: ";
 
         int choice;
@@ -32,7 +31,7 @@ int main() {
             float height, weight;
 
             cout << "\n--- НОВЫЙ ЗАПРОС ---\n";
-            cout << "Никнейм: ";
+            cout << "Имя: ";
             cin.getline(nickname, 100);
 
             cout << "Рост (см): ";
@@ -47,19 +46,18 @@ int main() {
             if (outFile.is_open()) {
                 outFile << nickname << " " << height << " " << weight << "\n";
                 outFile.close();
-                cout << "\n✅ ЗАПРОС ОТПРАВЛЕН!\n";
+                cout << "\n ЗАПРОС ОТПРАВЛЕН!\n";
                 cout << "   Ник: " << nickname << "\n";
             }
             else {
-                cout << "\n❌ ОШИБКА: Не могу открыть файл\n";
+                cout << "\n ОШИБКА: Не могу открыть файл\n";
             }
         }
         else if (choice == 2) {
-            // ============== ИСПРАВЛЕНО: ЧИТАЕМ ОБЩИЙ ФАЙЛ ==============
             string responseFile = "C:\\Users\\Public\\Server\\all_responses.txt";
 
             cout << "\n--- ПРОВЕРКА ОТВЕТОВ ---\n";
-            cout << "   Читаем файл: " << responseFile << "\n\n";
+ 
 
             ifstream inFile(responseFile);
             if (inFile.is_open()) {
@@ -81,8 +79,8 @@ int main() {
                 cout << "==================\n";
             }
             else {
-                cout << "❌ Файл не найден\n";
-                cout << "   Возможно, сервер ещё не создал ответы\n";
+                cout << " Файл не найден\n";
+                cout << " Возможно, сервер ещё не создал ответы\n";
             }
             // ============================================================
         }
