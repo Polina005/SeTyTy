@@ -1,90 +1,123 @@
-#include <iostream>
-#include <fstream>
+#include <iostream> 
+#include <fstream> 
+#include <string> 
+#include <thread> 
+#include <chrono> 
+#include <conio.h> 
+#include <sstream> 
 #include <windows.h>
-using namespace std;
 
-int main() {
+using namespace std;
+using namespace std::this_thread;
+using namespace std::chrono;
+
+// Установка правильной кодировки для консоли
+void setRussianConsole() {
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
-    setlocale(LC_ALL, "Russian");
+}
 
-    cout << "=== КЛИЕНТ ЗАПУЩЕН ===\n";
+int main() {
+    setRussianConsole();
+    setlocale(LC_ALL, "rus");
 
-    while (true) {
-        cout << "\n=====================\n";
-        cout << "1 - Отправить запрос\n";
-        cout << "2 - Проверить ответы\n";
-        cout << "0 - Выход\n";
-        cout << "=====================\n";
-        cout << "Выбор: ";
+    // ИСПРАВЛЕНО: используем правильный путь к рабочему столу
+    const string SERVER_FILE = "C:\\Users\\Public\\Server\\server.txt";
+    const string CLIENT_DIR = "C:\\Users\\Public\\Server\\";
 
-        int choice;
-        cin >> choice;
-        cin.ignore();
+    string nickname;
+    cout << "-----------------------------\n";
+    cout << "|         КЛИЕНТ            |\n";
+    cout << "-----------------------------\n\n";
+    cout << "Имя: ";
+    cin >> nickname;
 
-        if (choice == 0) {
-            cout << "Выход...\n";
-            break;
+    string client_file = CLIENT_DIR + nickname + ".txt";
+
+    string surname;
+    double height, weight;
+    cout << "Фамилия: ";
+    cin >> surname;
+    cout << "Рост (см): ";
+    cin >> height;
+    cout << "Вес (кг): ";
+    cin >> weight;
+
+    // Отправка запроса серверу 
+    ofstream fileOTVET(SERVER_FILE, ios::app);
+    if (!fileOTVET) {
+        cerr << "Ошибка открытия файла сервера!" << endl;
+        cout << "НАЖМИТЕ ESC ДЛЯ ВЫХОДА...";
+        while (_getch() != 27) {}
+        return 1;
+    }
+
+    fileOTVET << nickname << ":" << surname << " " << height << " " << weight << endl;
+    fileOTVET.close();
+
+    cout << "\nЗапрос отправлен. Ожидание ответа...\n";
+
+    int lineCl1 = 0;
+    ifstream count_file(client_file);
+    string temp;
+    while (getline(count_file, temp)) {
+        if (!temp.empty()) lineCl1++;
+    }
+    count_file.close();
+
+    bool answered = false;
+    bool exitByEsc = false;
+    int timeout_counter = 0;
+    const int TIMEOUT_MAX = 150;
+
+    cout << "Ожидание ответа от сервера (ESC - выход)...\n" << endl;
+
+    while (!answered && !exitByEsc && timeout_counter < TIMEOUT_MAX) {
+
+        if (_kbhit()) {
+            if (_getch() == 27) {
+                exitByEsc = true;
+                break;
+            }
         }
-        else if (choice == 1) {
-            char nickname[100];
-            float height, weight;
 
-            cout << "\n--- НОВЫЙ ЗАПРОС ---\n";
-            cout << "Имя: ";
-            cin.getline(nickname, 100);
+        sleep_for(milliseconds(200));
+        timeout_counter++;
 
-            cout << "Рост (см): ";
-            cin >> height;
+        int LineCl2 = 0;
+        ifstream f(client_file);
+        string line;
+        string lastLine;
 
-            cout << "Вес (кг): ";
-            cin >> weight;
-            cin.ignore();
-
-            // Отправляем запрос
-            ofstream outFile("C:\\Users\\Public\\Server\\server.txt", ios::app);
-            if (outFile.is_open()) {
-                outFile << nickname << " " << height << " " << weight << "\n";
-                outFile.close();
-                cout << "\n ЗАПРОС ОТПРАВЛЕН!\n";
-                cout << "   Ник: " << nickname << "\n";
-            }
-            else {
-                cout << "\n ОШИБКА: Не могу открыть файл\n";
+        while (getline(f, line)) {
+            if (!line.empty()) {
+                LineCl2++;
+                lastLine = line;
             }
         }
-        else if (choice == 2) {
-            string responseFile = "C:\\Users\\Public\\Server\\all_responses.txt";
+        f.close();
 
-            cout << "\n--- ПРОВЕРКА ОТВЕТОВ ---\n";
- 
-
-            ifstream inFile(responseFile);
-            if (inFile.is_open()) {
-                cout << "=== ВСЕ ОТВЕТЫ ===\n";
-                char line[256];
-                int count = 0;
-
-                while (inFile.getline(line, 256)) {
-                    if (line[0] != '\0') {
-                        cout << line << "\n";
-                        count++;
-                    }
-                }
-                inFile.close();
-
-                if (count == 0) {
-                    cout << "   (файл пуст)\n";
-                }
-                cout << "==================\n";
-            }
-            else {
-                cout << " Файл не найден\n";
-                cout << " Возможно, сервер ещё не создал ответы\n";
-            }
-            // ============================================================
+        if (LineCl2 > lineCl1) {
+            cout << "\n--------------------------\n";
+            cout << " ПОЛУЧЕН ОТВЕТ ОТ СЕРВЕРА:\n";
+            cout << "----------------------------\n";
+            cout << "   " << lastLine << "\n";
+            cout << "----------------------------\n\n";
+            answered = true;
         }
     }
 
-    return 0;
+    if (exitByEsc) {
+        cout << "Клиент завершил работу.\n";
+    }
+    else if (timeout_counter >= TIMEOUT_MAX) {
+        cout << "Время ожидания истекло (30 сек).\n";
+    }
+    else {
+        cout << "Ответ получен.\n";
+    }
+
+    cout << "\n-----------------\n";
+    cout << "НАЖМИТЕ ESC ДЛЯ ВЫХОДА...";
+    while (_getch() != 27) {}
 }
